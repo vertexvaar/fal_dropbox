@@ -4,7 +4,7 @@ if (!defined('TYPO3_MODE')) {
 }
 
 // Register accessToken wizard
-if (!\TYPO3\CMS\Core\Utility\GeneralUtility::compat_version('8.0')) {
+if (1 !== version_compare(TYPO3_branch, '8.0')) {
     \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addModulePath(
         'access_token',
         'EXT:fal_dropbox/Classes/Wizards/AccessToken/'

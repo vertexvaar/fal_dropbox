@@ -14,7 +14,8 @@ namespace SFroemken\FalDropbox\ViewHelpers;
  *
  * The TYPO3 project - inspiring people to share!
  */
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+
+use TYPO3\CMS\Core\Utility\VersionNumberUtility;
 use TYPO3\CMS\Fluid\Core\ViewHelper\AbstractViewHelper;
 
 /**
@@ -31,6 +32,6 @@ class CompatVersionViewHelper extends AbstractViewHelper
      */
     public function render($version = '')
     {
-        return GeneralUtility::compat_version($version);
+        return 1 === version_compare(TYPO3_branch, $version);
     }
 }

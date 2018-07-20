@@ -71,13 +71,13 @@ class AccessTokenService
         /** @var \TYPO3\CMS\Backend\Routing\UriBuilder $uriBuilder */
         $uriBuilder = GeneralUtility::makeInstance(UriBuilder::class);
         $formUri = (string)$uriBuilder->buildUriFromRoute('access_token');
-        
+
         $formFields = GeneralUtility::_POST('dropbox');
         $parameters = GeneralUtility::_GET('P');
         if (empty($parameters)) {
             $parameters = GeneralUtility::_POST('parameters');
         }
-        
+
         $appKey = htmlspecialchars($formFields['appKey']);
         $appSecret = htmlspecialchars($formFields['appSecret']);
 
@@ -97,7 +97,7 @@ class AccessTokenService
         $this->view->assign('formUri', $formUri);
         $this->view->assign('errors', $this->errors);
 
-        if (GeneralUtility::compat_version('7.6')) {
+        if (1 === version_compare(TYPO3_branch, '7.6')) {
             /** @var Response $response */
             $response = GeneralUtility::makeInstance(Response::class);
             $response->getBody()->write($this->view->render());

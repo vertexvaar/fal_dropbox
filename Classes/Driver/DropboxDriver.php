@@ -36,27 +36,27 @@ class DropboxDriver extends AbstractDriver
      * @var \TYPO3\CMS\Extbase\Object\ObjectManagerInterface
      */
     protected $objectManager;
-    
+
     /**
      * @var \TYPO3\CMS\Core\Cache\CacheManager
      */
     protected $cacheManager;
-    
+
     /**
      * @var \TYPO3\CMS\Core\Cache\Frontend\FrontendInterface
      */
     protected $cache;
-    
+
     /**
      * @var Dropbox
      */
     protected $dropbox;
-    
+
     /**
      * @var array
      */
     protected $settings = [];
-    
+
     /**
      * processes the configuration, should be overridden by subclasses
      *
@@ -66,7 +66,7 @@ class DropboxDriver extends AbstractDriver
     {
         // no need to configure something.
     }
-    
+
     /**
      * Sets the storage uid the driver belongs to
      *
@@ -77,7 +77,7 @@ class DropboxDriver extends AbstractDriver
     {
         $this->storageUid = (int)$storageUid;
     }
-    
+
     /**
      * Initializes this object. This is called by the storage after the driver
      * has been attached.
@@ -97,7 +97,7 @@ class DropboxDriver extends AbstractDriver
             $this->dropbox = null;
         }
     }
-    
+
     /**
      * Returns the capabilities of this driver.
      *
@@ -109,11 +109,11 @@ class DropboxDriver extends AbstractDriver
     {
         // if PUBLIC is available, each file will initiate a request to Dropbox-Api to retrieve a public share link
         // this is extremely slow.
-        
+
         // return ResourceStorage::CAPABILITY_BROWSABLE + ResourceStorage::CAPABILITY_PUBLIC + ResourceStorage::CAPABILITY_WRITABLE;
         return ResourceStorage::CAPABILITY_BROWSABLE + ResourceStorage::CAPABILITY_WRITABLE;
     }
-    
+
     /**
      * Merges the capabilities merged by the user at the storage
      * configuration into the actual capabilities of the driver
@@ -125,9 +125,9 @@ class DropboxDriver extends AbstractDriver
      */
     public function mergeConfigurationCapabilities($capabilities)
     {
-    
+
     }
-    
+
     /**
      * Returns true if this driver has the given capability.
      *
@@ -137,9 +137,9 @@ class DropboxDriver extends AbstractDriver
      */
     public function hasCapability($capability)
     {
-    
+
     }
-    
+
     /**
      * Returns true if this driver uses case-sensitive identifiers. NOTE: This
      * is a configurable setting, but the setting does not change the way the
@@ -156,7 +156,7 @@ class DropboxDriver extends AbstractDriver
         }
         return true;
     }
-    
+
     /**
      * Hashes a file identifier, taking the case sensitivity of the file system
      * into account. This helps mitigating problems with case-insensitive
@@ -171,7 +171,7 @@ class DropboxDriver extends AbstractDriver
         $identifier = $this->canonicalizeAndCheckFileIdentifier($identifier);
         return sha1($identifier);
     }
-    
+
     /**
      * Returns the identifier of the root level folder of the storage.
      *
@@ -181,7 +181,7 @@ class DropboxDriver extends AbstractDriver
     {
         return '/';
     }
-    
+
     /**
      * Returns the default folder new files should be put into.
      *
@@ -191,7 +191,7 @@ class DropboxDriver extends AbstractDriver
     {
         DebugUtility::debug(__FUNCTION__, 'Method');
     }
-    
+
     /**
      * Returns the identifier of the folder the file resides in
      *
@@ -204,7 +204,7 @@ class DropboxDriver extends AbstractDriver
         $fileIdentifier = $this->canonicalizeAndCheckFileIdentifier($fileIdentifier);
         return PathUtility::dirname($fileIdentifier) . '/';
     }
-    
+
     /**
      * Returns the public URL to a file.
      * Either fully qualified URL or relative to PATH_site (rawurlencoded).
@@ -218,7 +218,7 @@ class DropboxDriver extends AbstractDriver
         // This driver is marked as non public, so this will never be called:
         return $this->dropbox->createShareableLink($identifier);
     }
-    
+
     /**
      * Creates a folder, within a parent folder.
      * If no parent folder is given, a root level folder will be created
@@ -238,7 +238,7 @@ class DropboxDriver extends AbstractDriver
         $this->cache->flush();
         return $newIdentifier;
     }
-    
+
     /**
      * Renames a folder in this storage.
      *
@@ -251,16 +251,16 @@ class DropboxDriver extends AbstractDriver
     {
         $folderIdentifier = $this->canonicalizeAndCheckFolderIdentifier($folderIdentifier);
         $newName = $this->sanitizeFileName($newName);
-        
+
         $targetIdentifier = PathUtility::dirname($folderIdentifier) . '/' . $newName;
         $targetIdentifier = $this->canonicalizeAndCheckFolderIdentifier($targetIdentifier);
-        
+
         // dropbox don't like slashes at the end of identifier
         $this->dropbox->move(rtrim($folderIdentifier, '/'), rtrim($targetIdentifier, '/'));
         $this->cache->flush();
         return [];
     }
-    
+
     /**
      * Removes a folder in filesystem.
      *
@@ -279,7 +279,7 @@ class DropboxDriver extends AbstractDriver
         }
         return true;
     }
-    
+
     /**
      * Checks if a file exists.
      *
@@ -302,7 +302,7 @@ class DropboxDriver extends AbstractDriver
         }
         return false;
     }
-    
+
     /**
      * Checks if a folder exists.
      *
@@ -315,12 +315,12 @@ class DropboxDriver extends AbstractDriver
         $parentFolderIdentifier = $this->canonicalizeAndCheckFolderIdentifier(
             PathUtility::dirname($folderIdentifier)
         );
-        
+
         // root folder will always exist
         if ($folderIdentifier === '/') {
             return true;
         }
-        
+
         $info = $this->getMetaData($parentFolderIdentifier);
         if (isset($info['folders'])) {
             foreach($info['folders'] as $folder) {
@@ -331,7 +331,7 @@ class DropboxDriver extends AbstractDriver
         }
         return false;
     }
-    
+
     /**
      * Checks if a folder contains files and (if supported) other folders.
      *
@@ -343,7 +343,7 @@ class DropboxDriver extends AbstractDriver
     {
         DebugUtility::debug(__FUNCTION__, 'Method');
     }
-    
+
     /**
      * Adds a file from the local server hard disk to a given path in TYPO3s
      * virtual file system. This assumes that the local file exists, so no
@@ -362,20 +362,20 @@ class DropboxDriver extends AbstractDriver
     {
         $localFilePath = $this->canonicalizeAndCheckFilePath($localFilePath);
         $newFileIdentifier = $this->canonicalizeAndCheckFolderIdentifier($targetFolderIdentifier) . $newFileName;
-        
+
         $this->dropbox->simpleUpload(
             $localFilePath,
             $newFileIdentifier,
             ['mode' => 'overwrite']
         );
-        
+
         if ($removeOriginal) {
             unlink($localFilePath);
         }
         $this->cache->flush();
         return $newFileIdentifier;
     }
-    
+
     /**
      * Creates a new (empty) file and returns the identifier.
      *
@@ -390,17 +390,17 @@ class DropboxDriver extends AbstractDriver
         $fileIdentifier =  $this->canonicalizeAndCheckFileIdentifier(
             $parentFolderIdentifier . $this->sanitizeFileName(ltrim($fileName, '/'))
         );
-        
+
         // Dropbox can not create files. So we have to create an empty file locally and upload it to Dropbox
         $localFilePath = GeneralUtility::tempnam('fal_dropbox');
         $this->dropbox->simpleUpload($localFilePath, $fileIdentifier);
         unlink($localFilePath);
-        
+
         $this->cache->flush();
-        
+
         return $fileIdentifier;
     }
-    
+
     /**
      * Copies a file *within* the current storage.
      * Note that this is only about an inner storage copy action,
@@ -416,13 +416,13 @@ class DropboxDriver extends AbstractDriver
     {
         $fileIdentifier = $this->canonicalizeAndCheckFileIdentifier($fileIdentifier);
         $targetFileIdentifier = $this->canonicalizeAndCheckFileIdentifier($targetFolderIdentifier . '/' . $fileName);
-        
+
         // dropbox don't like slashes at the end of identifier
         $this->dropbox->copy($fileIdentifier, $targetFileIdentifier);
         $this->cache->flush();
         return $targetFileIdentifier;
     }
-    
+
     /**
      * Renames a file in this storage.
      *
@@ -435,15 +435,15 @@ class DropboxDriver extends AbstractDriver
     {
         $fileIdentifier = $this->canonicalizeAndCheckFileIdentifier($fileIdentifier);
         $newName = $this->sanitizeFileName($newName);
-        
+
         $targetIdentifier = PathUtility::dirname($fileIdentifier) . '/' . $newName;
         $targetIdentifier = $this->canonicalizeAndCheckFileIdentifier($targetIdentifier);
-        
+
         $this->dropbox->move($fileIdentifier, $targetIdentifier);
         $this->cache->flush();
         return $targetIdentifier;
     }
-    
+
     /**
      * Replaces a file with file in local file system.
      *
@@ -470,7 +470,7 @@ class DropboxDriver extends AbstractDriver
             return false;
         }
     }
-    
+
     /**
      * Removes a file from the filesystem. This does not check if the file is
      * still used or if it is a bad idea to delete it for some other reason
@@ -489,7 +489,7 @@ class DropboxDriver extends AbstractDriver
             return false;
         }
     }
-    
+
     /**
      * Creates a hash for a file.
      *
@@ -506,7 +506,7 @@ class DropboxDriver extends AbstractDriver
                 break;
         }
     }
-    
+
     /**
      * Moves a file *within* the current storage.
      * Note that this is only about an inner-storage move action,
@@ -522,13 +522,13 @@ class DropboxDriver extends AbstractDriver
     {
         $fileIdentifier = $this->canonicalizeAndCheckFileIdentifier($fileIdentifier);
         $targetFileIdentifier = $this->canonicalizeAndCheckFileIdentifier($targetFolderIdentifier . '/' . $newFileName);
-        
+
         // dropbox don't like slashes at the end of identifier
         $this->dropbox->move($fileIdentifier, $targetFileIdentifier);
         $this->cache->flush();
         return $targetFileIdentifier;
     }
-    
+
     /**
      * Folder equivalent to moveFileWithinStorage().
      *
@@ -542,13 +542,13 @@ class DropboxDriver extends AbstractDriver
     {
         $sourceFolderIdentifier = $this->canonicalizeAndCheckFolderIdentifier($sourceFolderIdentifier);
         $targetFolderIdentifier = $this->canonicalizeAndCheckFolderIdentifier($targetFolderIdentifier . '/' . $newFolderName);
-        
+
         // dropbox don't like slashes at the end of identifier
         $this->dropbox->move(rtrim($sourceFolderIdentifier, '/'), rtrim($targetFolderIdentifier, '/'));
         $this->cache->flush();
         return [];
     }
-    
+
     /**
      * Folder equivalent to copyFileWithinStorage().
      *
@@ -571,7 +571,7 @@ class DropboxDriver extends AbstractDriver
             return true;
         }
     }
-    
+
     /**
      * Returns the contents of a file. Beware that this requires to load the
      * complete file into memory and also may require fetching the file from an
@@ -586,7 +586,7 @@ class DropboxDriver extends AbstractDriver
     {
         return $this->dropbox->download($fileIdentifier)->getContents();
     }
-    
+
     /**
      * Sets the contents of a file to the specified value.
      *
@@ -604,12 +604,12 @@ class DropboxDriver extends AbstractDriver
             $fileIdentifier,
             ['mode' => 'overwrite']
         );
-        
+
         unlink($localFilePath);
         $this->cache->flush();
         return $bytes;
     }
-    
+
     /**
      * Checks if a file inside a folder exists
      *
@@ -623,7 +623,7 @@ class DropboxDriver extends AbstractDriver
         $fileIdentifier = $folderIdentifier . $fileName;
         return $this->fileExists($fileIdentifier);
     }
-    
+
     /**
      * Checks if a folder inside a folder exists.
      *
@@ -638,7 +638,7 @@ class DropboxDriver extends AbstractDriver
         $identifier = $this->canonicalizeAndCheckFolderIdentifier($identifier);
         return $this->folderExists($identifier);
     }
-    
+
     /**
      * Returns a path to a local copy of a file for processing it. When changing the
      * file, you have to take care of replacing the current version yourself!
@@ -655,7 +655,7 @@ class DropboxDriver extends AbstractDriver
     {
         return $this->copyFileToTemporaryPath($fileIdentifier);
     }
-    
+
     /**
      * Returns the permissions of a file/folder as an array
      * (keys r, w) of boolean flags
@@ -673,7 +673,7 @@ class DropboxDriver extends AbstractDriver
             'w' => true
         ];
     }
-    
+
     /**
      * Directly output the contents of the file to the output
      * buffer. Should not take care of header files or flushing
@@ -689,7 +689,7 @@ class DropboxDriver extends AbstractDriver
         fputs($handle, $this->dropbox->download($identifier)->getContents());
         fclose($handle);
     }
-    
+
     /**
      * Checks if a given identifier is within a container, e.g. if
      * a file or folder is within another folder.
@@ -718,7 +718,7 @@ class DropboxDriver extends AbstractDriver
         }
         return GeneralUtility::isFirstPartOfStr($entryIdentifier, $folderIdentifier);
     }
-    
+
     /**
      * Returns information about a file.
      *
@@ -743,7 +743,7 @@ class DropboxDriver extends AbstractDriver
         }
         return $fileInformation;
     }
-    
+
     /**
      * Extracts a specific FileInformation from the FileSystems.
      *
@@ -790,7 +790,7 @@ class DropboxDriver extends AbstractDriver
                 throw new \InvalidArgumentException(sprintf('The information "%s" is not available.', $property));
         }
     }
-    
+
     /**
      * Returns information about a file.
      *
@@ -801,14 +801,14 @@ class DropboxDriver extends AbstractDriver
     public function getFolderInfoByIdentifier($folderIdentifier)
     {
         $folderIdentifier = $this->canonicalizeAndCheckFolderIdentifier($folderIdentifier);
-        
+
         return [
             'identifier' => $folderIdentifier,
             'name' => PathUtility::basename($folderIdentifier),
             'storage' => $this->storageUid
         ];
     }
-    
+
     /**
      * Returns the identifier of a file inside the folder
      *
@@ -821,7 +821,7 @@ class DropboxDriver extends AbstractDriver
     {
         return $this->canonicalizeAndCheckFileIdentifier($folderIdentifier . '/' . $fileName);
     }
-    
+
     /**
      * Returns a list of files inside the specified path
      *
@@ -850,7 +850,7 @@ class DropboxDriver extends AbstractDriver
         }
         return $files;
     }
-    
+
     /**
      * Returns the identifier of a folder inside the folder
      *
@@ -864,7 +864,7 @@ class DropboxDriver extends AbstractDriver
         $folderIdentifier = $this->canonicalizeAndCheckFolderIdentifier($folderIdentifier . '/' . $folderName);
         return $folderIdentifier;
     }
-    
+
     /**
      * Returns a list of folders inside the specified path
      *
@@ -893,7 +893,7 @@ class DropboxDriver extends AbstractDriver
         }
         return $folders;
     }
-    
+
     /**
      * Returns the number of files inside the specified path
      *
@@ -908,7 +908,7 @@ class DropboxDriver extends AbstractDriver
         $info = $this->getMetaData($folderIdentifier);
         return isset($info['files']) ? count($info['files']) : 0;
     }
-    
+
     /**
      * Returns the number of folders inside the specified path
      *
@@ -923,7 +923,7 @@ class DropboxDriver extends AbstractDriver
         $info = $this->getMetaData($folderIdentifier);
         return isset($info['folders']) ? count($info['folders']) : 0;
     }
-    
+
     /**
      * Makes sure the Path given as parameter is valid
      *
@@ -936,7 +936,7 @@ class DropboxDriver extends AbstractDriver
     protected function canonicalizeAndCheckFilePath($filePath)
     {
         $filePath = PathUtility::getCanonicalPath($filePath);
-        
+
         // filePath must be valid
         // Special case is required by vfsStream in Unit Test context
         if (!GeneralUtility::validPathStr($filePath)) {
@@ -944,7 +944,7 @@ class DropboxDriver extends AbstractDriver
         }
         return $filePath;
     }
-    
+
     /**
      * Makes sure the identifier given as parameter is valid
      *
@@ -965,7 +965,7 @@ class DropboxDriver extends AbstractDriver
         }
         return $fileIdentifier;
     }
-    
+
     /**
      * Makes sure the identifier given as parameter is valid
      *
@@ -982,7 +982,7 @@ class DropboxDriver extends AbstractDriver
         }
         return $canonicalizedIdentifier;
     }
-    
+
     /**
      * get file or folder information from cache or directly from dropbox
      *
@@ -993,21 +993,21 @@ class DropboxDriver extends AbstractDriver
     public function getMetaData($path)
     {
         $path = $path === '/' ? '/' : rtrim($path, '/');
-        
+
         try {
             $cacheKey = $this->getCacheIdentifierForPath($path);
             if ($this->cache->has($cacheKey)) {
                 $info = $this->cache->get($cacheKey);
             } else {
                 $info = [];
-                
+
                 // get info for current path
                 if ($path !== '/') {
                     $info = $this->dropbox->getMetadata($path)->getData();
                 } else {
                     $info['.tag'] = 'folder';
                 }
-                
+
                 if ($info['.tag'] === 'folder') {
                     /** @var FileMetadata|FolderMetadata $item */
                     foreach ($this->dropbox->listFolder($path)->getItems() as $item) {
@@ -1019,7 +1019,7 @@ class DropboxDriver extends AbstractDriver
                         }
                     }
                 }
-                
+
                 $this->cache->set($cacheKey, $info);
             }
         } catch(\Exception $e) {
@@ -1028,7 +1028,7 @@ class DropboxDriver extends AbstractDriver
         }
         return $info;
     }
-    
+
     /**
      * cache resource
      *
@@ -1043,7 +1043,7 @@ class DropboxDriver extends AbstractDriver
             $this->cache->set($cacheIdentifier, $metaData->getData());
         }
     }
-    
+
     /**
      * Returns the cache identifier for a given path.
      *
@@ -1054,7 +1054,7 @@ class DropboxDriver extends AbstractDriver
     {
         return sha1($this->storageUid . ':' . trim($path, '/'));
     }
-    
+
     /**
      * Checks if a resource exists - does not care for the type (file or folder).
      *
@@ -1075,7 +1075,7 @@ class DropboxDriver extends AbstractDriver
             return false;
         }
     }
-    
+
     /**
      * Returns the permissions of a file as an array (keys r, w) of boolean flags
      *
@@ -1089,7 +1089,7 @@ class DropboxDriver extends AbstractDriver
             'w' => true
         ];
     }
-    
+
     /**
      * Returns the permissions of a folder as an array (keys r, w) of boolean flags
      *
@@ -1103,7 +1103,7 @@ class DropboxDriver extends AbstractDriver
             'w' => true
         ];
     }
-    
+
     /**
      * Returns information about a file for a given file object.
      *
@@ -1114,7 +1114,7 @@ class DropboxDriver extends AbstractDriver
     {
         return $this->getFileInfoByIdentifier($file->getIdentifier());
     }
-    
+
     /**
      * Copies a file to a temporary path and returns that path.
      *
